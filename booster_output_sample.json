@@ -1,0 +1,91 @@
+{
+  "timestamp": "2026-06-09T16:12:18",
+  "rider": {
+    "lat": 5.605,
+    "lng": -0.173,
+    "speed_kmh": 28,
+    "heading_deg": 135,
+    "has_active_delivery": false,
+    "dropoff_lat": null,
+    "dropoff_lng": null,
+    "fuel_level_pct": 78
+  },
+  "hold_recommended": true,
+  "hold_reason": "HOLD \u2014 projected net yield GHS 2.93 after fuel is below threshold GHS 4.00. Wait for stronger surge.",
+  "hotspots": [
+    {
+      "lat": 5.584,
+      "lng": -0.198,
+      "radius_km": 0.11,
+      "demand_score": 157.4,
+      "surge_probability": 1.0,
+      "checkout_eta_min": 6.0,
+      "category_mix": {
+        "transport": 1,
+        "govt": 1,
+        "bank": 3,
+        "mall": 40,
+        "office": 1,
+        "other": 2
+      },
+      "label": "Borla, Creative Cakes and Sugar Craft"
+    },
+    {
+      "lat": 5.585,
+      "lng": -0.208,
+      "radius_km": 0.11,
+      "demand_score": 108.0,
+      "surge_probability": 1.0,
+      "checkout_eta_min": 18.4,
+      "category_mix": {
+        "transport": 3,
+        "bank": 1,
+        "food": 1,
+        "mall": 19,
+        "office": 2,
+        "other": 1
+      },
+      "label": "Commercial Bank, Ghana Commercial Bank"
+    },
+    {
+      "lat": 5.582,
+      "lng": -0.198,
+      "radius_km": 0.11,
+      "demand_score": 114.1,
+      "surge_probability": 1.0,
+      "checkout_eta_min": 17.5,
+      "category_mix": {
+        "transport": 1,
+        "hospital": 2,
+        "bank": 2,
+        "church": 1,
+        "food": 1,
+        "mall": 31,
+        "other": 2
+      },
+      "label": "Nima Station, Dons Medical Services"
+    }
+  ],
+  "primary_vector": {
+    "target_lat": 5.584,
+    "target_lng": -0.198,
+    "bearing_deg": 229.8,
+    "distance_km": 3.62,
+    "tta_min": 8.9,
+    "expected_yield_ghs": 9.45,
+    "confidence": 0.99,
+    "action": "MOVE",
+    "reason": "Surge wave peaking in 6min at 5.5840,-0.1980. Head SW \u2014 arrive in 9min. Traffic friction: 13% degradation."
+  },
+  "leapfrog_vector": null,
+  "arbitrage_alert": null,
+  "waybill_alert": null,
+  "weather_advisory": null,
+  "grid_stats": {
+    "cells_scanned": 2503,
+    "hotspot_cells": 286,
+    "avg_demand_score": 5.4,
+    "traffic_friction_at_rider": 0.87,
+    "effective_speed_kmh": 24.4
+  }
+}
