@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-09T16:12:18",
+  "timestamp": "2026-06-09T16:54:22",
   "rider": {
     "lat": 5.605,
     "lng": -0.173,
@@ -10,16 +10,16 @@
     "dropoff_lng": null,
     "fuel_level_pct": 78
   },
-  "hold_recommended": true,
-  "hold_reason": "HOLD \u2014 projected net yield GHS 2.93 after fuel is below threshold GHS 4.00. Wait for stronger surge.",
+  "hold_recommended": false,
+  "hold_reason": "",
   "hotspots": [
     {
       "lat": 5.584,
       "lng": -0.198,
       "radius_km": 0.11,
-      "demand_score": 157.4,
+      "demand_score": 185.3,
       "surge_probability": 1.0,
-      "checkout_eta_min": 6.0,
+      "checkout_eta_min": 7.0,
       "category_mix": {
         "transport": 1,
         "govt": 1,
@@ -31,29 +31,12 @@
       "label": "Borla, Creative Cakes and Sugar Craft"
     },
     {
-      "lat": 5.585,
-      "lng": -0.208,
-      "radius_km": 0.11,
-      "demand_score": 108.0,
-      "surge_probability": 1.0,
-      "checkout_eta_min": 18.4,
-      "category_mix": {
-        "transport": 3,
-        "bank": 1,
-        "food": 1,
-        "mall": 19,
-        "office": 2,
-        "other": 1
-      },
-      "label": "Commercial Bank, Ghana Commercial Bank"
-    },
-    {
       "lat": 5.582,
       "lng": -0.198,
       "radius_km": 0.11,
-      "demand_score": 114.1,
+      "demand_score": 147.0,
       "surge_probability": 1.0,
-      "checkout_eta_min": 17.5,
+      "checkout_eta_min": 16.2,
       "category_mix": {
         "transport": 1,
         "hospital": 2,
@@ -64,6 +47,23 @@
         "other": 2
       },
       "label": "Nima Station, Dons Medical Services"
+    },
+    {
+      "lat": 5.588,
+      "lng": -0.207,
+      "radius_km": 0.11,
+      "demand_score": 87.8,
+      "surge_probability": 0.88,
+      "checkout_eta_min": 17.2,
+      "category_mix": {
+        "transport": 1,
+        "bank": 3,
+        "church": 1,
+        "food": 4,
+        "mall": 13,
+        "other": 2
+      },
+      "label": "Agbadinar, National Investment Bank"
     }
   ],
   "primary_vector": {
@@ -72,10 +72,10 @@
     "bearing_deg": 229.8,
     "distance_km": 3.62,
     "tta_min": 8.9,
-    "expected_yield_ghs": 9.45,
+    "expected_yield_ghs": 12.25,
     "confidence": 0.99,
     "action": "MOVE",
-    "reason": "Surge wave peaking in 6min at 5.5840,-0.1980. Head SW \u2014 arrive in 9min. Traffic friction: 13% degradation."
+    "reason": "Surge wave peaking in 7min at 5.5840,-0.1980. Head SW \u2014 arrive in 9min. Road: GOOD. Traffic friction: 13% total degradation."
   },
   "leapfrog_vector": null,
   "arbitrage_alert": null,
@@ -83,9 +83,21 @@
   "weather_advisory": null,
   "grid_stats": {
     "cells_scanned": 2503,
-    "hotspot_cells": 286,
-    "avg_demand_score": 5.4,
+    "hotspot_cells": 290,
+    "avg_demand_score": 5.6,
     "traffic_friction_at_rider": 0.87,
-    "effective_speed_kmh": 24.4
-  }
+    "effective_speed_kmh": 24.4,
+    "road_surface": "GOOD",
+    "shadow_matrix_active": [
+      "Circle Chop Bar Cluster",
+      "Osu Oxford St Canteens",
+      "Labadi Market Chop",
+      "Adabraka Canteen Row",
+      "Teshie Chop Bars",
+      "Bubuashie Evening Chop"
+    ],
+    "shadow_windows_firing": 6,
+    "poll_mode": "INTERCEPT \u2014 high-precision tracking"
+  },
+  "next_poll_interval_seconds": 8
 }

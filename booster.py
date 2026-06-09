@@ -1,6 +1,6 @@
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║  FalconFX — BOOSTER  |  Predictive Demand Engine  v1.0                     ║
+║  FalconFX — BOOSTER  |  Predictive Demand Engine  v2.0                     ║
 ║  Accra, Ghana  |  Companion Map Architecture                                ║
 ║                                                                              ║
 ║  Outputs: Hot Spot Centroids + Drift Vectors → floating mobile widget        ║
@@ -111,6 +111,51 @@ RAIN_FLOOD_ZONES = [
     ("Abossey Okai",   5.566, -0.231, 0.8),
 ]
 
+# ── Road Quality Zones: unpaved / potholed / unstructured secondary roads
+#    (name, lat, lng, radius_km, speed_penalty)
+#    speed_penalty 0-1: fraction of speed LOST due to road surface (0.4 = 40% speed cut)
+#    Engine will favour alternative corridors around these zones automatically.
+ROAD_QUALITY_ZONES = [
+    ("Nima/Maamobi Back Streets",    5.589, -0.211, 0.6, 0.30),
+    ("Chorkor Coastal Track",        5.537, -0.243, 0.8, 0.42),
+    ("James Town/Ussher Lanes",      5.548, -0.206, 0.5, 0.35),
+    ("Agbogbloshie Unpaved",         5.556, -0.231, 0.6, 0.45),
+    ("Kasoa Pothole Corridor",       5.534, -0.419, 1.5, 0.48),
+    ("Ashaiman Back Roads",          5.698,  0.031, 0.8, 0.35),
+    ("Oyibi/Dodowa Rural Gravel",    5.770, -0.120, 2.0, 0.55),
+    ("Darkuman Secondary",           5.584, -0.242, 0.5, 0.25),
+    ("Alajo Back Streets",           5.591, -0.225, 0.4, 0.28),
+    ("Labadi Beach Track",           5.553, -0.148, 0.6, 0.22),
+    ("Adenta Unpaved Links",         5.706, -0.163, 0.8, 0.30),
+    ("Weija Gravel Road",            5.567, -0.321, 0.7, 0.38),
+    ("Dansoman Back Lanes",          5.546, -0.253, 0.5, 0.25),
+    ("Kotobabi Unpaved",             5.581, -0.220, 0.4, 0.28),
+]
+
+# ── Offline/WhatsApp Shadow Matrix: known chop bars & canteens invisible to aggregators
+#    (name, lat, lng, radius_km, peak_windows [(h_start_float, h_end_float)], intensity)
+#    h_start_float: 7.5 = 07:30, 12 = 12:00, etc.  intensity: demand boost score 0-100
+SHADOW_MATRIX = [
+    ("Nima Waakye Belt",           5.589, -0.211, 0.4, [(7.5, 9.5)],              58),
+    ("Madina Canteen Row",         5.682, -0.169, 0.3, [(7.5, 9.5),(12.0,14.0)],  52),
+    ("Circle Chop Bar Cluster",    5.571, -0.222, 0.5, [(7.5, 9.5),(12.0,14.0),(18.0,20.0)], 62),
+    ("Makola Market Canteens",     5.550, -0.206, 0.4, [(7.5, 9.5),(12.0,14.0)],  66),
+    ("Osu Oxford St Canteens",     5.565, -0.178, 0.4, [(12.0,14.0),(18.0,21.0)], 46),
+    ("Kaneshie Market Chop",       5.556, -0.244, 0.4, [(7.5, 9.5),(12.0,14.0)],  60),
+    ("Tema Comm 5 Canteens",       5.673,  0.013, 0.4, [(7.5, 9.5),(12.0,14.0)],  46),
+    ("Achimota Market Food",       5.639, -0.237, 0.4, [(7.5, 9.5),(12.0,14.0)],  52),
+    ("Labadi Market Chop",         5.555, -0.148, 0.3, [(12.0,14.0),(18.0,20.0)], 40),
+    ("Darkuman Junction Chop",     5.584, -0.242, 0.3, [(7.5, 9.5),(12.0,14.0)],  44),
+    ("Ashaiman Market Food",       5.698,  0.031, 0.4, [(7.5, 9.5),(12.0,14.0)],  50),
+    ("Agbogbloshie Waakye Spot",   5.556, -0.231, 0.3, [(7.5, 9.5)],              56),
+    ("Adabraka Canteen Row",       5.562, -0.212, 0.3, [(12.0,14.0),(18.0,20.0)], 42),
+    ("Pig Farm Jct Chop",          5.580, -0.230, 0.3, [(12.0,14.0)],             36),
+    ("Dansoman Market Food",       5.546, -0.253, 0.4, [(7.5, 9.5),(12.0,14.0)],  46),
+    ("Lapaz Waakye Corner",        5.609, -0.243, 0.3, [(7.5, 9.5)],              48),
+    ("Teshie Chop Bars",           5.583, -0.107, 0.4, [(12.0,14.0),(18.0,20.0)], 40),
+    ("Bubuashie Evening Chop",     5.577, -0.249, 0.3, [(18.0,21.0)],             38),
+]
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — DATA STRUCTURES
@@ -187,6 +232,7 @@ class BoosterOutput:
     waybill_alert: Optional[dict]
     weather_advisory: Optional[dict]
     grid_stats: dict
+    next_poll_interval_seconds: int   # adaptive battery/data saver
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -287,29 +333,61 @@ class GridEngine:
 class TrafficFriction:
     def __init__(self):
         self.bottlenecks = BOTTLENECKS
+        self.road_quality_zones = ROAD_QUALITY_ZONES
 
     def speed_multiplier(self, lat: float, lng: float, hour: int) -> float:
         """
-        Returns a multiplier 0.2-1.0.
-        1.0 = free flow, 0.2 = gridlock.
-        Factors: proximity to bottlenecks + time of day alignment.
+        Returns a multiplier 0.15-1.0.
+        1.0 = free flow, 0.15 = gridlock + severe road degradation.
+        Factors: bottleneck congestion + time-of-day + road surface quality.
         """
         multiplier = 1.0
+
+        # ── Layer 1: bottleneck congestion (time-dependent)
         for name, blat, blng, h_start, h_end, severity in self.bottlenecks:
             dist = haversine_km(lat, lng, blat, blng)
             if dist > 3.0:
                 continue
-            # Proximity decay: full impact within 500m, none beyond 3km
             proximity_factor = max(0.0, 1.0 - (dist / 3.0))
-            # Time-of-day factor
             in_peak = h_start <= hour < h_end
             time_factor = 1.0 if in_peak else 0.25
             impact = severity * proximity_factor * time_factor
             multiplier = max(0.2, multiplier - impact)
+
+        # ── Layer 2: road surface quality (always-on for bike riders)
+        multiplier = max(0.15, multiplier - self.road_surface_penalty(lat, lng))
         return multiplier
 
+    def road_surface_penalty(self, lat: float, lng: float) -> float:
+        """
+        Returns an additive speed penalty 0-0.55 based on proximity to
+        known unpaved / potholed road zones. Bikes feel this more than cars.
+        """
+        penalty = 0.0
+        for name, rlat, rlng, radius_km, sp in self.road_quality_zones:
+            dist = haversine_km(lat, lng, rlat, rlng)
+            if dist > radius_km:
+                continue
+            # Linear decay: full penalty at centre, zero at edge
+            proximity = max(0.0, 1.0 - (dist / radius_km))
+            penalty = max(penalty, sp * proximity)
+        return penalty
+
+    def road_quality_label(self, lat: float, lng: float) -> str:
+        """Return a human-readable road quality tag for the rider's position."""
+        worst_name, worst_penalty = None, 0.0
+        for name, rlat, rlng, radius_km, sp in self.road_quality_zones:
+            dist = haversine_km(lat, lng, rlat, rlng)
+            if dist <= radius_km and sp > worst_penalty:
+                worst_name, worst_penalty = name, sp
+        if worst_penalty >= 0.40:
+            return f"ROUGH — {worst_name} (potholed/unpaved, -{worst_penalty*100:.0f}% speed)"
+        if worst_penalty >= 0.20:
+            return f"DEGRADED — {worst_name} (-{worst_penalty*100:.0f}% speed)"
+        return "GOOD"
+
     def effective_speed(self, rider: RiderTelemetry, hour: int) -> float:
-        """Rider's effective km/h after friction."""
+        """Rider's effective km/h after all friction layers."""
         base = max(rider.speed_kmh, 15.0)  # minimum 15 km/h for routing
         return base * self.speed_multiplier(rider.lat, rider.lng, hour)
 
@@ -324,6 +402,7 @@ class DemandSimulator:
       - Cart footprint spikes
       - Restaurant app traffic surges
       - Historical time-of-day demand curve
+      - Shadow Matrix: offline / WhatsApp / phone-in chop bar & canteen orders
     Injects these onto the grid cells as demand_score and checkout_eta.
     """
 
@@ -337,6 +416,7 @@ class DemandSimulator:
 
     def __init__(self, grid: GridEngine, seed: int = None):
         self.grid = grid
+        self.shadow_matrix = SHADOW_MATRIX
         if seed is not None:
             random.seed(seed)
 
@@ -354,14 +434,34 @@ class DemandSimulator:
             max_buf = max(max_buf, random.uniform(lo, hi))
         return max_buf
 
-    def inject_signals(self, hour: int, simulate_hotspots: list[tuple] = None):
+    def _shadow_boost(self, hour: int, minute: int = 0) -> list[tuple]:
+        """
+        Returns a list of (lat, lng, intensity) synthetic signal spikes
+        from the Shadow Matrix for the current time window.
+        Fires during waakye morning runs (07:30-09:30), lunch canteen rush
+        (12:00-14:00), and evening chop bar windows (18:00-21:00).
+        """
+        h_float = hour + minute / 60.0
+        spikes = []
+        for name, slat, slng, radius_km, windows, intensity in self.shadow_matrix:
+            for w_start, w_end in windows:
+                if w_start <= h_float < w_end:
+                    # Noise ±10% so each window feels organic, not perfectly uniform
+                    jitter = random.uniform(0.90, 1.10)
+                    spikes.append((slat, slng, intensity * jitter, radius_km, name))
+                    break
+        return spikes
+
+    def inject_signals(self, hour: int, minute: int = 0,
+                       simulate_hotspots: list[tuple] = None):
         """
         Compute demand_score for every cell.
-        Optional simulate_hotspots: [(lat, lng, intensity)] for testing.
+        Optional simulate_hotspots: [(lat, lng, intensity)] for platform API spikes.
+        Shadow Matrix spikes are always injected automatically based on time.
         """
         time_mult = self._time_multiplier(hour)
 
-        # Base scoring pass
+        # ── Base scoring pass
         for cell in self.grid.cells.values():
             noise = random.uniform(0.7, 1.3)
             cell.demand_score = cell.base_weight * time_mult * noise
@@ -370,7 +470,17 @@ class DemandSimulator:
             cell.is_hotspot = False
             cell.checkout_eta_min = None
 
-        # Inject synthetic signal spikes (simulates cart/API data)
+        # ── Shadow Matrix injection (offline/WhatsApp chop bar demand)
+        shadow_spikes = self._shadow_boost(hour, minute)
+        for slat, slng, intensity, radius_km, sname in shadow_spikes:
+            nearby = self.grid.nearby_cells(slat, slng, radius_km)
+            for cell in nearby:
+                dist = haversine_km(slat, slng, cell.grid_lat, cell.grid_lng)
+                boost = intensity * max(0.0, 1.0 - dist / radius_km)
+                cell.demand_score = min(100, cell.demand_score + boost)
+                cell.surge_probability = min(1.0, cell.demand_score / 100.0)
+
+        # ── Platform API / cart spike injection
         if simulate_hotspots:
             for slat, slng, intensity in simulate_hotspots:
                 nearby = self.grid.nearby_cells(slat, slng, 0.5)
@@ -380,15 +490,25 @@ class DemandSimulator:
                     cell.demand_score = min(100, cell.demand_score + boost)
                     cell.surge_probability = min(1.0, cell.demand_score / 100.0)
 
-        # Mark hotspots (top 5% by demand score)
+        # ── Mark hotspots (top 5% by demand score)
         scores = sorted(c.demand_score for c in self.grid.cells.values())
         if scores:
             threshold = scores[int(len(scores) * 0.95)]
             for cell in self.grid.cells.values():
                 if cell.demand_score >= threshold:
                     cell.is_hotspot = True
-                    # Checkout ETA = prep buffer + small random pre-checkout window
                     cell.checkout_eta_min = cell.prep_buffer_min + random.uniform(2, 5)
+
+    def active_shadow_windows(self, hour: int, minute: int = 0) -> list[str]:
+        """Return names of shadow locations currently in a peak window."""
+        h_float = hour + minute / 60.0
+        active = []
+        for name, *_, windows, intensity in self.shadow_matrix:
+            for w_start, w_end in windows:
+                if w_start <= h_float < w_end:
+                    active.append(name)
+                    break
+        return active
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -684,7 +804,50 @@ class PredictiveHoldSM:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SECTION 13 — BOOSTER ENGINE  (main orchestrator)
+# SECTION 13 — ADAPTIVE POLLER  (kinematic battery & data optimizer)
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AdaptivePoller:
+    """
+    Computes next_poll_interval_seconds dynamically to conserve phone battery
+    and mobile data without sacrificing intercept precision.
+
+    States:
+      STATIONARY  (speed ≤ 2 km/h or HOLD)  → 90-120s  — battery saver
+      CRUISING    (speed 3-20 km/h)          → 25-35s   — standard tracking
+      INTERCEPTING (speed > 20 + high conf) → 8-10s    — precision mode
+    """
+
+    STATIONARY_RANGE  = (90, 120)
+    CRUISING_RANGE    = (25, 35)
+    INTERCEPT_RANGE   = (8, 10)
+    CONFIDENCE_THRESH = 0.55   # minimum confidence to enter INTERCEPT mode
+
+    def compute(self, rider: RiderTelemetry, hold: bool,
+                primary_vector: Optional[DriftVector]) -> int:
+        # Battery saver: held or nearly stopped
+        if hold or rider.speed_kmh <= 2:
+            return random.randint(*self.STATIONARY_RANGE)
+
+        # High-precision intercept: actively moving on a confident vector
+        conf = primary_vector.confidence if primary_vector else 0.0
+        if rider.speed_kmh > 20 and conf >= self.CONFIDENCE_THRESH:
+            return random.randint(*self.INTERCEPT_RANGE)
+
+        # Standard cruising
+        return random.randint(*self.CRUISING_RANGE)
+
+    @staticmethod
+    def label(interval: int) -> str:
+        if interval >= 90:
+            return "STATIONARY — battery saver mode"
+        if interval <= 10:
+            return "INTERCEPT — high-precision tracking"
+        return "CRUISING — standard tracking"
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 14 — BOOSTER ENGINE  (main orchestrator)
 # ══════════════════════════════════════════════════════════════════════════════
 
 class BoosterEngine:
@@ -699,6 +862,7 @@ class BoosterEngine:
         self.waybill   = WaybillInterceptor()
         self.monsoon   = MonsoonLayer(self.grid)
         self.hold_sm   = PredictiveHoldSM()
+        self.poller    = AdaptivePoller()
         print("  Engine ready.\n")
 
     def compute(self,
@@ -711,8 +875,9 @@ class BoosterEngine:
 
         ts = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
-        # ── 1. Inject demand signals onto grid
-        self.demand.inject_signals(hour, simulate_hotspots=simulate_hotspots)
+        # ── 1. Inject demand signals (base + shadow matrix + platform spikes)
+        self.demand.inject_signals(hour, minute=minute,
+                                   simulate_hotspots=simulate_hotspots)
 
         # ── 2. Pull candidate hotspot cells within rider's search radius
         nearby = self.grid.nearby_cells(rider.lat, rider.lng, search_radius_km)
@@ -732,6 +897,7 @@ class BoosterEngine:
             tta  = self.wave.compute_tta(rider, top_cell.grid_lat,
                                          top_cell.grid_lng, hour)
             friction_mult = self.friction.speed_multiplier(rider.lat, rider.lng, hour)
+            road_label    = self.friction.road_quality_label(rider.lat, rider.lng)
             expected_ghs  = top_score * 0.08
 
             primary_vector = DriftVector(
@@ -746,7 +912,8 @@ class BoosterEngine:
                 reason=(f"Surge wave peaking in {top_cell.checkout_eta_min:.0f}min at "
                         f"{top_cell.grid_lat:.4f},{top_cell.grid_lng:.4f}. "
                         f"Head {compass_label(bear)} — arrive in {tta:.0f}min. "
-                        f"Traffic friction: {(1-friction_mult)*100:.0f}% degradation.")
+                        f"Road: {road_label}. "
+                        f"Traffic friction: {(1-friction_mult)*100:.0f}% total degradation.")
             )
 
         # ── 5. Hold state machine
@@ -781,18 +948,27 @@ class BoosterEngine:
         # ── 10. Monsoon layer
         weather_advisory = self.monsoon.apply(rider, rain_active_zones or [], hour)
 
-        # ── 11. Grid stats
+        # ── 11. Adaptive poll interval
+        poll_interval = self.poller.compute(rider, hold, primary_vector)
+
+        # ── 12. Grid stats (now includes road quality + shadow matrix activity)
         active_cells   = [c for c in nearby if c.demand_score > 0]
         avg_score      = (sum(c.demand_score for c in active_cells) / len(active_cells)
                           if active_cells else 0)
         friction_here  = self.friction.speed_multiplier(rider.lat, rider.lng, hour)
+        road_surface   = self.friction.road_quality_label(rider.lat, rider.lng)
+        shadow_active  = self.demand.active_shadow_windows(hour, minute)
 
         grid_stats = {
-            "cells_scanned": len(nearby),
-            "hotspot_cells": len(hotspot_cells),
-            "avg_demand_score": round(avg_score, 1),
-            "traffic_friction_at_rider": round(friction_here, 2),
-            "effective_speed_kmh": round(self.friction.effective_speed(rider, hour), 1),
+            "cells_scanned":              len(nearby),
+            "hotspot_cells":              len(hotspot_cells),
+            "avg_demand_score":           round(avg_score, 1),
+            "traffic_friction_at_rider":  round(friction_here, 2),
+            "effective_speed_kmh":        round(self.friction.effective_speed(rider, hour), 1),
+            "road_surface":               road_surface,
+            "shadow_matrix_active":       shadow_active,
+            "shadow_windows_firing":      len(shadow_active),
+            "poll_mode":                  AdaptivePoller.label(poll_interval),
         }
 
         return BoosterOutput(
@@ -807,11 +983,12 @@ class BoosterEngine:
             waybill_alert=waybill_alert,
             weather_advisory=weather_advisory,
             grid_stats=grid_stats,
+            next_poll_interval_seconds=poll_interval,
         )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SECTION 14 — CONSOLE SIMULATION DEMO
+# SECTION 17 — CONSOLE SIMULATION DEMO  (v2.0 — 17 modules)
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _divider(char="═", width=72): print(char * width)
@@ -831,7 +1008,7 @@ def _print_vector(label, v):
     print(f"      Reason     : {v['reason']}")
 
 def run_simulation():
-    _title("FalconFX BOOSTER — Predictive Demand Engine  |  Console Simulation")
+    _title("FalconFX BOOSTER v2.0 — 17-Module Predictive Demand Engine  |  Final Simulation")
 
     # ── Initialise engine
     engine = BoosterEngine("places.json")
@@ -879,6 +1056,15 @@ def run_simulation():
     print(f"    Avg demand score   : {g['avg_demand_score']}")
     print(f"    Traffic friction   : {g['traffic_friction_at_rider']:.0%} speed retained")
     print(f"    Effective speed    : {g['effective_speed_kmh']} km/h")
+    print(f"    Road surface       : {g['road_surface']}")
+    shadow = g['shadow_matrix_active']
+    print(f"    Shadow matrix      : {g['shadow_windows_firing']} window(s) firing")
+    for sw in shadow[:4]:
+        print(f"                         • {sw}")
+
+    _section("ADAPTIVE POLL INTERVAL  [NEW]")
+    print(f"    Next poll in       : {out1.next_poll_interval_seconds}s")
+    print(f"    Mode               : {g['poll_mode']}")
 
     _section("HOT SPOT CENTROIDS")
     for i, hs in enumerate(out1.hotspots, 1):
@@ -956,6 +1142,15 @@ def run_simulation():
     print(f"    Hotspot cells      : {g2['hotspot_cells']}")
     print(f"    Traffic friction   : {g2['traffic_friction_at_rider']:.0%} speed retained")
     print(f"    Effective speed    : {g2['effective_speed_kmh']} km/h")
+    print(f"    Road surface       : {g2['road_surface']}")
+    shadow2 = g2['shadow_matrix_active']
+    print(f"    Shadow matrix      : {g2['shadow_windows_firing']} window(s) firing")
+    for sw in shadow2[:3]:
+        print(f"                         • {sw}")
+
+    _section("ADAPTIVE POLL INTERVAL  [NEW]")
+    print(f"    Next poll in       : {out2.next_poll_interval_seconds}s")
+    print(f"    Mode               : {g2['poll_mode']}")
 
     _section("HOLD STATE MACHINE")
     status2 = "🛑 HOLD" if out2.hold_recommended else "✅ MOVE"
@@ -1017,6 +1212,12 @@ def run_simulation():
     print(f"    Cells scanned    : {g3['cells_scanned']}")
     print(f"    Hotspot cells    : {g3['hotspot_cells']}")
     print(f"    Avg demand score : {g3['avg_demand_score']}")
+    print(f"    Road surface     : {g3['road_surface']}")
+    print(f"    Shadow matrix    : {g3['shadow_windows_firing']} window(s) firing")
+
+    _section("ADAPTIVE POLL INTERVAL  [NEW]")
+    print(f"    Next poll in     : {out3.next_poll_interval_seconds}s  ← battery saver engaged")
+    print(f"    Mode             : {g3['poll_mode']}")
 
     _section("HOLD STATE MACHINE")
     status3 = "🛑 HOLD" if out3.hold_recommended else "✅ MOVE"
@@ -1028,12 +1229,64 @@ def run_simulation():
         _section("PRIMARY DRIFT VECTOR (low confidence)")
         _print_vector("Primary", out3.primary_vector)
 
+    # ── Scenario 4: Waakye morning run — Shadow Matrix fires at 08:00
+    print("\n\n")
+    _title("SCENARIO 4 — Shadow Matrix: Waakye Morning Run  |  08:00")
+    print("  Rider: near Nima/Maamobi, 08:00 waakye window ACTIVE")
+    print("  Demonstrates: shadow demand injection + road quality penalty on unpaved grid")
+    _divider("─")
+
+    rider4 = RiderTelemetry(
+        lat=5.591, lng=-0.218,
+        speed_kmh=22, heading_deg=200,
+        has_active_delivery=False,
+        fuel_level_pct=88,
+    )
+    out4 = engine.compute(
+        rider=rider4, hour=8, minute=0,
+        search_radius_km=4.0,
+        simulate_hotspots=None,
+        rain_active_zones=[],
+    )
+
+    _section("RIDER STATE")
+    print(f"    Position   : {rider4.lat}°N, {rider4.lng}°E  (Nima corridor)")
+    print(f"    Speed      : {rider4.speed_kmh} km/h  |  Heading: {rider4.heading_deg}° {compass_label(rider4.heading_deg)}")
+
+    g4 = out4.grid_stats
+    _section("GRID REPORT — SHADOW MATRIX ACTIVE")
+    print(f"    Cells scanned      : {g4['cells_scanned']}")
+    print(f"    Hotspot cells      : {g4['hotspot_cells']}")
+    print(f"    Avg demand score   : {g4['avg_demand_score']}")
+    print(f"    Road surface       : {g4['road_surface']}")
+    print(f"    Effective speed    : {g4['effective_speed_kmh']} km/h  (road quality penalty applied)")
+    print(f"    Shadow windows     : {g4['shadow_windows_firing']} ACTIVE  ← offline/WhatsApp demand")
+    for sw in g4['shadow_matrix_active'][:6]:
+        print(f"                         • {sw}")
+
+    _section("ADAPTIVE POLL INTERVAL  [NEW]")
+    print(f"    Next poll in       : {out4.next_poll_interval_seconds}s")
+    print(f"    Mode               : {g4['poll_mode']}")
+
+    _section("HOLD / MOVE")
+    status4 = "🛑 HOLD" if out4.hold_recommended else "✅ MOVE"
+    print(f"    Recommendation: {status4}")
+    if out4.hold_reason:
+        print(f"    Reason: {out4.hold_reason}")
+
+    _section("PRIMARY DRIFT VECTOR")
+    _print_vector("Primary", out4.primary_vector)
+
     _divider()
-    print(f"  Simulation complete.  Timestamp: {out1.timestamp}")
-    print(f"  Output schema is JSON-serialisable — pipe to mobile widget or notification layer.")
+    print(f"  v2.0 Simulation complete.  Timestamp: {out1.timestamp}")
+    print(f"  17 modules verified — all outputs JSON-serialisable.")
+    print(f"  FastAPI endpoint → start with:  python3 api.py")
+    print(f"  Health check     → GET  /booster/health")
+    print(f"  Shadow status    → GET  /booster/shadow")
+    print(f"  Compute          → POST /booster/compute")
     _divider()
 
-    # Export one full JSON output for inspection
+    # Export full JSON output for inspection
     with open("booster_output_sample.json", "w") as f:
         json.dump(asdict(out1), f, indent=2, default=str)
     print(f"\n  Sample JSON output saved → booster_output_sample.json")
