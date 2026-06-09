@@ -1,6 +1,6 @@
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║  FalconFX BOOSTER  —  FastAPI Endpoint  v2.0                                ║
+║  FalconFX BOOSTER  —  FastAPI Endpoint  v3.0                                ║
 ║                                                                              ║
 ║  POST /booster/compute  →  BoosterOutput JSON                                ║
 ║  GET  /booster/health   →  engine status                                     ║
@@ -136,11 +136,15 @@ def health():
         raise HTTPException(503, detail="Engine not initialised")
     return {
         "status": "ok",
-        "version": "2.0.0",
+        "version": "3.0.0",
         "grid_cells": len(_engine.grid.cells),
         "places_loaded": sum(len(c.places) for c in _engine.grid.cells.values()),
         "shadow_matrix_zones": len(_engine.demand.shadow_matrix),
         "road_quality_zones": len(_engine.friction.road_quality_zones),
+        "b2b_wholesale_zones": len(_engine.demand.b2b_zones),
+        "terminal_schedules": 5,
+        "front_running_mode": True,
+        "algorithm": "ghost_penalty + acceleration_scoring + 4layer_friction",
         "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
     }
 
@@ -182,10 +186,11 @@ def compute(req: ComputeRequest):
     if _engine is None:
         raise HTTPException(503, detail="Engine not initialised")
 
-    # Default hour/minute to current Accra time (UTC = GMT+0)
-    now = datetime.datetime.utcnow()
-    hour   = req.hour   if req.hour   is not None else now.hour
-    minute = req.minute if req.minute is not None else now.minute
+    # Default hour/minute/weekday to current Accra time (UTC = GMT+0)
+    now     = datetime.datetime.utcnow()
+    hour    = req.hour   if req.hour   is not None else now.hour
+    minute  = req.minute if req.minute is not None else now.minute
+    weekday = now.weekday()   # 0=Mon … 6=Sun
 
     rider = RiderTelemetry(
         lat=req.rider.lat,
@@ -207,6 +212,7 @@ def compute(req: ComputeRequest):
         search_radius_km=req.search_radius_km,
         simulate_hotspots=spikes or None,
         rain_active_zones=req.rain_active_zones,
+        weekday=weekday,
     )
 
     return asdict(result)
