@@ -114,5 +114,158 @@
     },
     "source": "overpass",
     "fetched_at": "2026-06-10T14:50:04Z"
+  },
+  {
+    "id": "geoapify/51c6b28281d3a2c7bf5967c519e1d08c1640f00101f90181b350000000000092031544722e2048696c6c61204c696d616e6e2048616c6c",
+    "name": "Dr. Hilla Limann Hall",
+    "lat": 5.6374504,
+    "lon": -0.1843103,
+    "address": "Dr. Hilla Limann Hall, 1 Jubilee Link, Accra, Ghana",
+    "categories": [
+      "accommodation",
+      "accommodation.hostel",
+      "building",
+      "building.accommodation",
+      "internet_access"
+    ],
+    "source": "geoapify/accommodation",
+    "fetched_at": "2026-06-10T15:36:57Z"
+  },
+  {
+    "id": "geoapify/51424632284fd6c7bf5967a155e6dc8f1640f00101f901406d38000000000092030c4a7562696c65652048616c6c",
+    "name": "Jubilee Hall",
+    "lat": 5.6404273,
+    "lon": -0.1859565,
+    "address": "Jubilee Hall, Diaspora Path, Accra, Ghana",
+    "categories": [
+      "accommodation",
+      "accommodation.hostel",
+      "building",
+      "building.accommodation"
+    ],
+    "source": "geoapify/accommodation",
+    "fetched_at": "2026-06-10T15:36:57Z"
+  },
+  {
+    "id": "geoapify/51cb604fce31c6c7bf59f35f5c25318c1640f00101f9017fb3500000000000920316416c6578616e646572204b7761706f6e672048616c6c",
+    "name": "Alexander Kwapong Hall",
+    "lat": 5.6368392,
+    "lon": -0.1854012,
+    "address": "Alexander Kwapong Hall, Jubilee Link, Accra, Ghana",
+    "categories": [
+      "accommodation",
+      "accommodation.hostel",
+      "building",
+      "building.accommodation",
+      "internet_access",
+      "internet_access.for_customers"
+    ],
+    "source": "geoapify/accommodation",
+    "fetched_at": "2026-06-10T15:36:57Z"
+  },
+  {
+    "id": "geoapify/51248d83e32d03d5bf590cbe15e3940a1640f00101f9016d98ad0000000000920310426f6a6f20426561636820486f74656c",
+    "name": "Bojo Beach Hotel",
+    "lat": 5.5103462,
+    "lon": -0.3281648,
+    "address": "Bojo Beach Hotel, Prof. J.E.A. Mills Bypass, Tuba, Ghana",
+    "categories": [
+      "accommodation",
+      "accommodation.hotel"
+    ],
+    "source": "geoapify/accommodation",
+    "fetched_at": "2026-06-10T15:36:57Z"
+  },
+  {
+    "id": "geoapify/515a8dcd7c274acabf594b7779edcd581640f00101f9017a17960000000000920327416c68616a692053616b61204d656d6f7269616c2050726570617261746f7279205363686f6f6c",
+    "name": "Alhaji Saka Memorial Preparatory School",
+    "lat": 5.5867221,
+    "lon": -0.2053417,
+    "address": "Alhaji Saka Memorial Preparatory School, Odoitso Street, Accra, Ghana",
+    "categories": [
+      "building",
+      "building.school",
+      "education",
+      "education.school",
+      "fee"
+    ],
+    "source": "geoapify/education",
+    "fetched_at": "2026-06-10T15:37:02Z"
+  },
+  {
+    "id": "geoapify/5194e6a10dbd90d1bf59865b703e27811640f00102f901339b36210000000092031c50656e7465636f737420556e697665727369747920436f6c6c656765",
+    "name": "Pentecost University College",
+    "lat": 5.6261498,
+    "lon": -0.2744533,
+    "address": "Pentecost University College, Polo, Sowutuom, Ghana",
+    "categories": [
+      "education",
+      "education.university",
+      "internet_access"
+    ],
+    "source": "geoapify/education",
+    "fetched_at": "2026-06-10T15:37:02Z"
+  },
+  {
+    "id": "geoapify/515a25fd625babc7bf59501a6a14928c1640f00103f9014a938c9001000000",
+    "name": "1 Jubilee Link",
+    "lat": 5.637276,
+    "lon": -0.1849169,
+    "address": "1 Jubilee Link, Accra, Ghana",
+    "categories": [
+      "commercial",
+      "commercial.supermarket"
+    ],
+    "source": "geoapify/shopping",
+    "fetched_at": "2026-06-10T15:37:05Z"
+  },
+  {
+    "id": "geoapify/5107b06df6ac108bbf59b5f006e286c11640f00103f9015d6b9b8601000000",
+    "name": "N2",
+    "lat": 5.6889911,
+    "lon": -0.0132154,
+    "address": "N2, Kpone-Katamanso Municipal District, Ghana",
+    "categories": [
+      "commercial.health_and_beauty",
+      "commercial.health_and_beauty.pharmacy",
+      "healthcare",
+      "healthcare.pharmacy"
+    ],
+    "source": "geoapify/healthcare",
+    "fetched_at": "2026-06-10T15:37:09Z"
+  },
+  {
+    "id": "geoapify/515505590520a48dbf5976fc170802dc1640f00103f90155f99a8601000000",
+    "name": "N2",
+    "lat": 5.7148515,
+    "lon": -0.0144732,
+    "address": "N2, Kpone-Katamanso Municipal District, Ghana",
+    "categories": [
+      "commercial.health_and_beauty",
+      "commercial.health_and_beauty.pharmacy",
+      "healthcare.pharmacy"
+    ],
+    "source": "geoapify/healthcare",
+    "fetched_at": "2026-06-10T15:37:09Z"
+  },
+  {
+    "id": "geoapify/510e6cf019e489c4bf599197daf74d8e1640f00102f9012f7bdf1100000000c002019203144e6f616827732041726b205265736964656e6365e203216f70656e7374726565746d61703a76656e75653a7761792f323939383538373335",
+    "name": "Noah's Ark Residence",
+    "lat": 5.6389693,
+    "lon": -0.1604581,
+    "address": "Noah's Ark Residence, Accra, Ghana",
+    "categories": [],
+    "source": "geoapify/text/halls of residence UG Legon Ac",
+    "fetched_at": "2026-06-10T15:37:18Z"
+  },
+  {
+    "id": "geoapify/51eba1c739fb14c8bf59ecd0faa58f8a1640f00101f90180b3500000000000c002019203144a65616e204e656c736f6e20416b612048616c6c",
+    "name": "Jean Nelson Aka Hall",
+    "lat": 5.6353136,
+    "lon": -0.1881403,
+    "address": "Jean Nelson Aka Hall, Jubilee Link, Accra, Ghana",
+    "categories": [],
+    "source": "geoapify/text/Jean Nelson Aka Hall Accra",
+    "fetched_at": "2026-06-10T15:37:26Z"
   }
 ]
