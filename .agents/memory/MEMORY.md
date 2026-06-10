@@ -1,0 +1,2 @@
+- [FalconFX v4.0 engine decisions](falconfx-engine.md) — Ghost Penalty vs Cash Cow Guard, velocity threshold, mega-church waves, corporate arbitrage architecture.
+- [FalconFX workspace layout](falconfx-layout.md) — Python files live in root (not artifacts/), workflow name, API port, section map.

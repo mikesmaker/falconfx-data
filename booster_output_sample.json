@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-09T18:25:54",
+  "timestamp": "2026-06-10T07:24:43",
   "rider": {
     "lat": 5.605,
     "lng": -0.173,
@@ -11,15 +11,15 @@
     "fuel_level_pct": 78
   },
   "hold_recommended": true,
-  "hold_reason": "HOLD \u2014 projected net yield GHS 0.05 after fuel is below threshold GHS 4.00. Wait for stronger surge.",
+  "hold_reason": "HOLD \u2014 projected net yield GHS -0.32 after fuel is below threshold GHS 4.00. Wait for stronger surge.",
   "hotspots": [
     {
       "lat": 5.564,
       "lng": -0.18,
       "radius_km": 0.11,
-      "demand_score": 75.6,
-      "surge_probability": 0.76,
-      "checkout_eta_min": 16.2,
+      "demand_score": 73.3,
+      "surge_probability": 0.73,
+      "checkout_eta_min": 15.7,
       "category_mix": {
         "hospital": 1,
         "food": 2,
@@ -31,34 +31,35 @@
     },
     {
       "lat": 5.564,
-      "lng": -0.176,
+      "lng": -0.179,
       "radius_km": 0.11,
-      "demand_score": 80.2,
-      "surge_probability": 0.8,
-      "checkout_eta_min": 16.3,
+      "demand_score": 98.2,
+      "surge_probability": 0.98,
+      "checkout_eta_min": 16.5,
       "category_mix": {
-        "food": 2,
-        "other": 2
+        "food": 1,
+        "mall": 1
       },
-      "label": "Vantage Front, Vantage point",
-      "acceleration_band": "PEAKING"
+      "label": "Tasty Jerk, The Urban",
+      "acceleration_band": "SUSTAINED_CASH_COW"
     },
     {
-      "lat": 5.588,
-      "lng": -0.197,
+      "lat": 5.579,
+      "lng": -0.202,
       "radius_km": 0.11,
-      "demand_score": 78.7,
-      "surge_probability": 0.79,
-      "checkout_eta_min": 14.2,
+      "demand_score": 72.1,
+      "surge_probability": 0.72,
+      "checkout_eta_min": 15.6,
       "category_mix": {
-        "transport": 3,
-        "hospital": 2,
-        "food": 1,
-        "mall": 10,
-        "other": 2
+        "school": 1,
+        "govt": 2,
+        "food": 3,
+        "mall": 13,
+        "office": 1,
+        "other": 3
       },
-      "label": "Gutter, Nima Gutter",
-      "acceleration_band": "PEAKING"
+      "label": "Charlina Complex School, Firdaus Foundation",
+      "acceleration_band": "EMERGING"
     }
   ],
   "primary_vector": {
@@ -67,7 +68,7 @@
     "bearing_deg": 189.6,
     "distance_km": 4.62,
     "tta_min": 11.4,
-    "expected_yield_ghs": 8.37,
+    "expected_yield_ghs": 8.0,
     "confidence": 0.99,
     "action": "MOVE",
     "reason": "[EMERGING] Surge wave peaking in 16min at 5.5640,-0.1800. Head S \u2014 arrive in 11min. Road: GOOD. Traffic friction: 13% total degradation."
@@ -76,9 +77,10 @@
   "arbitrage_alert": null,
   "waybill_alert": null,
   "weather_advisory": null,
+  "corporate_arbitrage": null,
   "grid_stats": {
     "cells_scanned": 2503,
-    "hotspot_cells": 304,
+    "hotspot_cells": 309,
     "avg_demand_score": 6.8,
     "traffic_friction_at_rider": 0.87,
     "effective_speed_kmh": 24.4,
@@ -99,9 +101,14 @@
     "front_running_mode": true,
     "top_zone_band": "EMERGING",
     "ghost_penalty_applied": false,
-    "emerging_cells": 73,
-    "ghost_cells_suppressed": 22,
+    "cash_cow_guard_active": false,
+    "emerging_cells": 84,
+    "ghost_cells_suppressed": 5,
+    "cash_cow_cells": 9,
+    "megachurch_waves_firing": 0,
+    "megachurch_events_active": [],
+    "event_friction": null,
     "weekday": 0
   },
-  "next_poll_interval_seconds": 107
+  "next_poll_interval_seconds": 100
 }

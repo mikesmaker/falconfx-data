@@ -1,6 +1,6 @@
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║  FalconFX — BOOSTER  |  Predictive Demand Engine  v3.0                     ║
+║  FalconFX — BOOSTER  |  Predictive Demand Engine  v4.0                     ║
 ║  Accra, Ghana  |  Asymmetric Companion Weapon Architecture                  ║
 ║                                                                              ║
 ║  STRATEGIC PARADIGM: SECONDARY COMPANION MAP                                ║
@@ -8,12 +8,18 @@
 ║  Single loyalty: maximise rider net daily income per km.                    ║
 ║                                                                              ║
 ║  CORE ALGORITHM: PURE PREDICTION — NOT REACTION                             ║
-║  Ghost Penalty  → penalises already-peaked hot zones (mainstream already   ║
-║                   sees them → no competitive edge, just ghost chasing)      ║
-║  Acceleration   → rewards "Emerging Pre-Checkout Grids" in the 40-75       ║
-║                   demand band where checkout explosion is imminent          ║
-║  TTA Lock       → synchronises rider arrival to 3-5 min BEFORE checkout    ║
-║                   so the rider is physically parked before Order is pressed ║
+║  Ghost Penalty (Fading)   → dying surge ≥85 score, velocity falling:       ║
+║                             75% haircut — mainstream sees it, dead zone.    ║
+║  Cash Cow Guard (Stable)  → ≥85 score, velocity STABLE/RISING: zero        ║
+║                             haircut — active market rush, keep printing.    ║
+║  Acceleration Multiplier  → 40-78 band: 1.5-2.0x bonus for imminent        ║
+║                             pre-checkout explosion (3-5 min before peak).   ║
+║  TTA Lock                 → synchronises rider arrival to 3-5 min BEFORE   ║
+║                             checkout so rider is parked before Order fires. ║
+║  Mega-Church Waves        → Perez Dome / Action Chapel / ICGC / BlackStar  ║
+║                             synchronized dismissal demand spikes injected.  ║
+║  Corporate Arbitrage      → Landing zone gate delays baked into net yield.  ║
+║                             Legal/consular push + Pre-COB crunch vectors.   ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
 
@@ -41,6 +47,11 @@ ACCRA_LNG_CENTRE = -0.18
 OFF_PEAK_SPEED_KMH = 50.0    # baseline free-flow speed
 ARTERIAL_PEAK_DEGRADATION = 0.60   # 60% slowdown on 70% of major arteries
 ARTERIAL_PEAK_COVERAGE = 0.70      # fraction of arterial grid affected
+
+# ── Velocity Trend Validation — Cash Cow Guard threshold
+# If a zone's demand_velocity >= this, the ghost haircut is SUPPRESSED even
+# at score ≥ 85. The zone is still printing money (deep market rush, downpour).
+VELOCITY_TREND_STABLE_THRESHOLD = 8.0    # velocity units — above = sustained cash cow
 
 # ── Category demand weights (how likely a place type generates delivery orders)
 CATEGORY_DEMAND_WEIGHT = {
@@ -172,6 +183,104 @@ LOW_DENSITY_ZONES = [
     ("Bortianor", 5.557, -0.323, 3.0),
     ("Oyibi",     5.770, -0.120, 3.0),
 ]
+
+# ──────────────────────────────────────────────────────────────────────────────
+# CORPORATE LANDING ZONE FRICTION CONSTANTS
+# Bakes physical door-to-desk delays (gate screening + walk + lift) into the
+# Net Hourly Yield calculation to prevent the Invisible Non-Riding Time Drain.
+# peak_windows: [(h_start_float, h_end_float)]  decimal hours
+# sunday_closed: True → 100% access denial on Sundays
+# saturday_capacity: 0.5 = 50% reduced, 1.0 = full
+# cutoff_hour: hard deadline — engine issues URGENT note if approaching
+# ──────────────────────────────────────────────────────────────────────────────
+CORPORATE_LANDING_ZONES = [
+    {
+        "name": "Ministries District / Accra Central Financial Core",
+        "lat": 5.558, "lng": -0.197,
+        "radius_km": 0.8,
+        "gate_screening_min": 15,    # ID check + package inspection
+        "walk_distance_m": 300,      # bikes banned inside — walk from perimeter
+        "elevator_wait_min": 12,
+        "peak_windows": [(8.0, 9.5), (11.0, 12.5), (14.5, 16.0)],
+        "sunday_closed": True,
+        "saturday_capacity": 1.0,
+        "cutoff_hour": 16.5,         # Ministries shuts at 16:30 sharp
+    },
+    {
+        "name": "Ridge / North Ridge Corporate Enclaves",
+        "lat": 5.574, "lng": -0.191,
+        "radius_km": 0.7,
+        "gate_screening_min": 8,
+        "walk_distance_m": 100,
+        "elevator_wait_min": 9,
+        "peak_windows": [(9.0, 10.5), (15.0, 16.5)],
+        "sunday_closed": False,
+        "saturday_capacity": 1.0,
+        "cutoff_hour": 18.0,
+    },
+    {
+        "name": "Airport City Commercial Hub",
+        "lat": 5.605, "lng": -0.167,
+        "radius_km": 0.9,
+        "gate_screening_min": 10,    # package X-ray at aviation security
+        "walk_distance_m": 200,      # 200m from airport perimeter
+        "elevator_wait_min": 10,
+        "peak_windows": [(8.5, 10.0), (11.5, 13.0)],
+        "sunday_closed": False,
+        "saturday_capacity": 0.5,    # 50% reduced Saturday capacity
+        "cutoff_hour": 19.0,
+    },
+]
+
+# ── Centralized Pickup Nodes — exact access points for each corporate zone
+CORPORATE_PICKUP_NODES = [
+    {
+        "name": "Ecobank HQ — Ground Floor Mailroom Annex",
+        "lat": 5.572, "lng": -0.194,
+        "flow": "A",
+        "access": "Rear service gate, Morocco Lane, West Ridge",
+    },
+    {
+        "name": "Standard Chartered Tower — Basement Courier Bays",
+        "lat": 5.604, "lng": -0.168,
+        "flow": "B",
+        "access": "Basement courier bay B1 level, Airport City",
+    },
+    {
+        "name": "Ministries — Ground Floor General Registry",
+        "lat": 5.556, "lng": -0.198,
+        "flow": "A",
+        "access": "General Registry offices, manual stamp books required",
+    },
+]
+
+# ── Outbound Routing Flows (three destination categories)
+CORPORATE_OUTBOUND_FLOWS = {
+    "A": {
+        "name": "Regulatory / Judicial Flow",
+        "description": "High Street Courts + Registrar General's Dept, Accra Central",
+        "destinations": [
+            {"name": "High Street Courts", "lat": 5.548, "lng": -0.198},
+            {"name": "Registrar General's Dept", "lat": 5.552, "lng": -0.202},
+        ],
+    },
+    "B": {
+        "name": "International Cargo Flow",
+        "description": "KIA Logistics Village / GACC Ghana Customs",
+        "destinations": [
+            {"name": "KIA Logistics Village", "lat": 5.604, "lng": -0.173},
+            {"name": "GACC / Customs Examination", "lat": 5.598, "lng": -0.165},
+        ],
+    },
+    "C": {
+        "name": "Upcountry Domestic Sorting Flow",
+        "description": "Kwame Nkrumah Circle VIP/STC or North Industrial Area",
+        "destinations": [
+            {"name": "Kwame Nkrumah Circle VIP / STC", "lat": 5.571, "lng": -0.222},
+            {"name": "North Industrial Area Sorting Hub", "lat": 5.580, "lng": -0.230},
+        ],
+    },
+}
 
 # ── Terminal Schedules for WaybillInterceptor (exact real-world timetables)
 #    windows: list of (h_start_float, h_end_float) — decimal hours
@@ -347,6 +456,102 @@ SHADOW_MATRIX = [
     ("Osu Canteens (Dinner Run)",     5.565, -0.178, 0.4, [(11.5,13.5),(18.0,21.0)], 46),
 ]
 
+# ──────────────────────────────────────────────────────────────────────────────
+# MEGA-CHURCH & HIGH-DENSITY EVENT SPATIAL WAVES  (v4.0)
+# Synchronized exit rushes from Accra's largest worship centres + stadium events.
+#
+# windows format:
+#   {"days": [0-6], "h_start": float, "h_end": float, "multiplier": float,
+#    "label": str, "crosses_midnight": bool}
+#   crosses_midnight=True → h_float >= h_start OR h_float < (h_end % 24)
+#
+# spintex_friction: True → Action Chapel triggers Spintex road gridlock bonus
+# independence events handled via date check in _megachurch_event_boost
+# ──────────────────────────────────────────────────────────────────────────────
+MEGACHURCH_EVENT_ZONES = [
+    {
+        "name": "Perez Chapel International — The Perez Dome, Dzorwulu",
+        "lat": 5.602, "lng": -0.186,
+        "radius_km": 1.2,
+        "capacity": 14000,
+        "windows": [
+            # Sunday bimodal dismissal
+            {"days": [6], "h_start": 8.25,  "h_end": 9.0,
+             "multiplier": 5.0, "label": "1st Service End", "crosses_midnight": False},
+            {"days": [6], "h_start": 11.25, "h_end": 12.5,
+             "multiplier": 6.0, "label": "2nd Service End", "crosses_midnight": False},
+            # Friday Night Vigil 22:00-01:00 (+400% = 5x)
+            {"days": [4], "h_start": 22.0,  "h_end": 25.0,
+             "multiplier": 5.0, "label": "Friday Night Vigil", "crosses_midnight": True},
+            # Saturday early morning vigil overflow (covers 00:00-01:00)
+            {"days": [5], "h_start": 0.0,   "h_end": 1.0,
+             "multiplier": 4.0, "label": "Vigil Overflow Saturday", "crosses_midnight": False},
+        ],
+        "spintex_friction": False,
+        "spintex_friction_penalty": 0.0,
+    },
+    {
+        "name": "Action Chapel International — Impact Arena, Spintex Road",
+        "lat": 5.627, "lng": -0.103,
+        "radius_km": 1.5,
+        "capacity": 30000,
+        "windows": [
+            # Sunday bimodal dismissal
+            {"days": [6], "h_start": 8.5,  "h_end": 9.5,
+             "multiplier": 7.0, "label": "Sunday 1st Dismissal", "crosses_midnight": False},
+            {"days": [6], "h_start": 10.5, "h_end": 11.5,
+             "multiplier": 7.0, "label": "Sunday 2nd Dismissal", "crosses_midnight": False},
+            # Friday Prayer Encounter 19:30-21:30
+            {"days": [4], "h_start": 19.5, "h_end": 21.5,
+             "multiplier": 4.0, "label": "Friday Prayer Encounter", "crosses_midnight": False},
+        ],
+        "spintex_friction": True,          # Spintex road gridlock during all windows
+        "spintex_friction_penalty": 0.70,  # 70% speed degradation on Spintex during events
+    },
+    {
+        "name": "ICGC Christ Temple — Abossey Okai Linked Campus",
+        "lat": 5.556, "lng": -0.227,
+        "radius_km": 0.8,
+        "capacity": 8000,
+        "windows": [
+            # Sunday primary dismissal
+            {"days": [6], "h_start": 9.25, "h_end": 10.5,
+             "multiplier": 4.5, "label": "Sunday Dismissal", "crosses_midnight": False},
+            # Thursday midweek corporate prayer spike
+            {"days": [3], "h_start": 12.0, "h_end": 13.5,
+             "multiplier": 2.0, "label": "Thursday Midweek Prayer", "crosses_midnight": False},
+        ],
+        "spintex_friction": False,
+        "spintex_friction_penalty": 0.0,
+    },
+    {
+        "name": "Black Star Square & Accra Sports Stadium",
+        "lat": 5.548, "lng": -0.196,
+        "radius_km": 1.0,
+        "capacity": 40000,
+        "windows": [
+            # Weekend concert closing slots — +500-800% → multiplier 7-9x
+            {"days": [5, 6], "h_start": 21.0, "h_end": 23.0,
+             "multiplier": 9.0, "label": "Weekend Concert Exit Surge", "crosses_midnight": False},
+        ],
+        # Independence Day calendar events handled separately in _megachurch_event_boost
+        "independence_parade": {
+            "month": 3, "day": 6,
+            "windows": [(10.0, 13.0)],
+            "multiplier": 9.0,    # +500-800% → 9x for 30,000+ synchronized exit
+            "label": "Independence Parade Exit",
+        },
+        "independence_run": {
+            "month": 3, "day": 7,
+            "windows": [(6.5, 10.0)],
+            "multiplier": 8.0,
+            "label": "Independence Day Run Dispersal",
+        },
+        "spintex_friction": False,
+        "spintex_friction_penalty": 0.0,
+    },
+]
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — DATA STRUCTURES
@@ -424,6 +629,7 @@ class BoosterOutput:
     arbitrage_alert: Optional[dict]
     waybill_alert: Optional[dict]
     weather_advisory: Optional[dict]
+    corporate_arbitrage: Optional[dict]     # v4.0 — corporate landing zone routing
     grid_stats: dict
     next_poll_interval_seconds: int
 
@@ -622,6 +828,64 @@ class TrafficFriction:
             penalty = max(penalty, ped_pen * proximity)
         return penalty
 
+    # ── Event friction info (Layer 5 — mega-church Spintex gridlock) ──────────
+
+    def event_friction_info(self, lat: float, lng: float,
+                            hour: int, minute: int, weekday: int) -> Optional[dict]:
+        """
+        Returns event friction data if an active mega-church/stadium event is
+        generating extra gridlock near the rider's position. Does NOT modify
+        speed_multiplier (avoids signature changes); instead feeds into
+        primary_vector reason string and grid_stats.
+        """
+        h_float = _hm_to_float(hour, minute)
+        for zone in MEGACHURCH_EVENT_ZONES:
+            if not zone.get("spintex_friction"):
+                continue
+            penalty = zone.get("spintex_friction_penalty", 0.0)
+            for win in zone.get("windows", []):
+                if weekday not in win["days"]:
+                    continue
+                if win.get("crosses_midnight"):
+                    h_end_norm = win["h_end"] % 24
+                    in_win = h_float >= win["h_start"] or h_float < h_end_norm
+                else:
+                    in_win = win["h_start"] <= h_float < win["h_end"]
+                if not in_win:
+                    continue
+                r = zone["radius_km"] + 2.0
+                dist = haversine_km(lat, lng, zone["lat"], zone["lng"])
+                if dist > r:
+                    continue
+                return {
+                    "zone": zone["name"],
+                    "event": win["label"],
+                    "penalty": penalty,
+                    "dist_km": round(dist, 2),
+                }
+        return None
+
+    def corporate_time_penalty_min(self, lat: float, lng: float,
+                                   hour: int, weekday: int) -> float:
+        """
+        Returns total non-riding overhead (gate + walk + lift) in minutes if
+        the rider is within a corporate landing zone during its peak window.
+        Returns 0.0 otherwise (no penalty outside zone / outside peak hours).
+        """
+        h_float = float(hour)
+        for zone in CORPORATE_LANDING_ZONES:
+            if zone.get("sunday_closed") and weekday == 6:
+                continue
+            dist = haversine_km(lat, lng, zone["lat"], zone["lng"])
+            if dist > zone["radius_km"]:
+                continue
+            in_peak = any(w[0] <= h_float < w[1] for w in zone["peak_windows"])
+            if not in_peak:
+                continue
+            walk_min = zone["walk_distance_m"] / 80.0
+            return zone["gate_screening_min"] + walk_min + zone["elevator_wait_min"]
+        return 0.0
+
     # ── Combined multiplier ───────────────────────────────────────────────────
 
     def speed_multiplier(self, lat: float, lng: float,
@@ -676,6 +940,7 @@ class DemandSimulator:
         self.grid = grid
         self.shadow_matrix = SHADOW_MATRIX
         self.b2b_zones = B2B_WHOLESALE_ZONES
+        self.megachurch_zones = MEGACHURCH_EVENT_ZONES
         if seed is not None:
             random.seed(seed)
 
@@ -733,6 +998,74 @@ class DemandSimulator:
             ))
         return spikes
 
+    def _megachurch_event_boost(self, hour: int, minute: int,
+                                weekday: int) -> list:
+        """
+        Inject synchronized demand spikes from mega-church dismissals and
+        large-scale stadium events. Returns list of
+        (lat, lng, intensity, radius_km, name, spintex_friction, friction_penalty).
+
+        Handles windows that cross midnight (e.g., Friday Night Vigil 22:00-01:00).
+        Also checks live calendar date for Independence Day events (March 6-7).
+        """
+        h_float = _hm_to_float(hour, minute)
+        today = datetime.datetime.now()
+        month, day = today.month, today.day
+        spikes = []
+
+        for zone in self.megachurch_zones:
+            fired = False
+
+            # ── Regular time windows (dismissals, vigils, prayer nights)
+            for win in zone.get("windows", []):
+                if weekday not in win["days"]:
+                    continue
+                if win.get("crosses_midnight"):
+                    # Window spans midnight, e.g. 22:00-01:00
+                    h_end_norm = win["h_end"] % 24
+                    in_win = h_float >= win["h_start"] or h_float < h_end_norm
+                else:
+                    in_win = win["h_start"] <= h_float < win["h_end"]
+                if not in_win:
+                    continue
+
+                capacity = zone.get("capacity", 5000)
+                intensity = min(100, (capacity / 200.0) * win["multiplier"])
+                jitter = random.uniform(0.90, 1.10)
+                spikes.append((
+                    zone["lat"], zone["lng"],
+                    intensity * jitter,
+                    zone["radius_km"],
+                    f"{zone['name']} — {win['label']}",
+                    zone.get("spintex_friction", False),
+                    zone.get("spintex_friction_penalty", 0.0),
+                ))
+                fired = True
+                break   # Only fire once per zone per call
+
+            # ── Calendar-specific events (Independence Day parade + run)
+            if not fired:
+                for ev_key in ("independence_parade", "independence_run"):
+                    ev = zone.get(ev_key)
+                    if not ev:
+                        continue
+                    if ev["month"] != month or ev["day"] != day:
+                        continue
+                    for w0, w1 in ev["windows"]:
+                        if w0 <= h_float < w1:
+                            capacity = zone.get("capacity", 5000)
+                            intensity = min(100, (capacity / 200.0) * ev["multiplier"])
+                            spikes.append((
+                                zone["lat"], zone["lng"],
+                                intensity * random.uniform(0.95, 1.05),
+                                zone.get("radius_km", 1.0),
+                                f"{zone['name']} — {ev['label']}",
+                                False, 0.0,
+                            ))
+                            break
+
+        return spikes
+
     def inject_signals(self, hour: int, minute: int = 0,
                        simulate_hotspots=None, weekday: int = 0):
         time_mult = self._time_multiplier(hour)
@@ -768,6 +1101,17 @@ class DemandSimulator:
                 cell.demand_score = min(100, cell.demand_score + boost)
                 cell.surge_probability = min(1.0, cell.demand_score / 100.0)
                 cell.demand_velocity = max(cell.demand_velocity, boost * 0.6)
+
+        # ── Mega-church & stadium event spatial waves (v4.0)
+        for slat, slng, intensity, radius_km, sname, _evt_fric, _fric_pen in \
+                self._megachurch_event_boost(hour, minute, weekday):
+            for cell in self.grid.nearby_cells(slat, slng, radius_km):
+                dist = haversine_km(slat, slng, cell.grid_lat, cell.grid_lng)
+                boost = intensity * max(0.0, 1.0 - dist / radius_km)
+                cell.demand_score = min(100, cell.demand_score + boost)
+                cell.surge_probability = min(1.0, cell.demand_score / 100.0)
+                # Synchronized exits are high-velocity spikes: velocity bonus 0.9x
+                cell.demand_velocity = max(cell.demand_velocity, boost * 0.9)
 
         # ── Platform API / cart spike injection (Bolt/Yango pre-checkout)
         if simulate_hotspots:
@@ -837,14 +1181,32 @@ class VelocityWaveEngine:
         eff_speed = self.friction.effective_speed(rider, hour, minute)
         return (dist_km / eff_speed) * 60.0 if eff_speed > 0 else 9999.0
 
-    def _acceleration_band(self, score: float) -> tuple:
+    def _acceleration_band(self, score: float, velocity: float = 0.0) -> tuple:
         """
-        Returns (multiplier, band_label) for the demand acceleration scoring.
+        v4.0 — Velocity Trend Validation Loop.
+
+        Ghost Penalty (Fading Surge):
+          score >= 85 AND velocity < STABLE_THRESHOLD → 75% haircut.
+          Zone is dying — mainstream platforms are already swarming it.
+          Entering gives ZERO competitive edge; rider is ghost-chasing.
+
+        Sustained Cash Cow Guard:
+          score >= 85 AND velocity >= STABLE_THRESHOLD → NO haircut.
+          Deep market rush / downpour still actively driving transactions.
+          Zone is printing money — rider should STAY or re-enter.
+
+        Emerging Band (40-78):
+          Pre-checkout explosion imminent. 1.5-2.0x multiplier locks rider
+          onto the zone 3-5 minutes before competitors see the demand spike.
         """
         if score >= self.GHOST_SCORE_THRESHOLD:
+            if velocity >= VELOCITY_TREND_STABLE_THRESHOLD:
+                # Cash Cow Guard — velocity is stable/rising: suppress haircut
+                return 1.0, "SUSTAINED_CASH_COW"
+            # Fading Ghost — velocity is dropping: enforce 75% haircut
             return self.GHOST_MULTIPLIER, "GHOST (already peaked — mainstream sees it)"
         if score >= self.EMERGING_BAND_HIGH:
-            # Upper transition — starting to go ghost, moderate penalty
+            # Upper transition — still building, moderate acceleration bonus
             fade = (score - self.EMERGING_BAND_HIGH) / (self.GHOST_SCORE_THRESHOLD - self.EMERGING_BAND_HIGH)
             mult = self.ACCEL_BONUS_MAX * (1.0 - fade * 0.5)
             return mult, "PEAKING"
@@ -890,8 +1252,8 @@ class VelocityWaveEngine:
             # More than 5 min late — zone is stale, mainstream already swarmed
             timing_score = math.exp(-0.40 * (delta - 5))
 
-        # Ghost penalty / acceleration multiplier
-        accel_mult, _ = self._acceleration_band(cell.demand_score)
+        # Ghost penalty / acceleration multiplier (velocity-aware v4.0)
+        accel_mult, _ = self._acceleration_band(cell.demand_score, cell.demand_velocity)
 
         # Velocity (rate-of-rise) bonus: fast-rising tiles get +20%
         velocity_bonus = 1.0 + min(0.20, cell.demand_velocity / 500.0)
@@ -899,8 +1261,8 @@ class VelocityWaveEngine:
         return (cell.demand_score * cell.surge_probability *
                 timing_score * accel_mult * velocity_bonus)
 
-    def acceleration_band_label(self, score: float) -> str:
-        _, label = self._acceleration_band(score)
+    def acceleration_band_label(self, score: float, velocity: float = 0.0) -> str:
+        _, label = self._acceleration_band(score, velocity)
         return label
 
     def rank_cells(self, rider: RiderTelemetry, cells: list,
@@ -996,7 +1358,149 @@ class ReturnTicketArbitrage:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SECTION 10 — WAYBILL PIPELINE INTERCEPTOR  (exact terminal schedules, v3.0)
+# SECTION 9.5 — CORPORATE ARBITRAGE ROUTER  (v4.0)
+# Intercepts corporate landing zone exits and pre-populates outbound routing
+# vectors. Two activation windows:
+#   Mid-Morning Legal & Consular Push  10:00-11:30
+#   Pre-COB Crunch                     15:30-17:00  (Ministries cut off 16:30)
+# ══════════════════════════════════════════════════════════════════════════════
+
+class CorporateArbitrageRouter:
+    """
+    When a rider is within range of a corporate landing zone during either the
+    Legal Push or Pre-COB Crunch windows, this router:
+      1. Identifies the nearest zone and bakes in all non-riding overhead
+         (gate screening + walk + lift) as a net-yield penalty.
+      2. Selects the correct outbound flow (A/B/C) and centralized pickup node.
+      3. Returns an actionable vector with destination, bearing, and access notes.
+    """
+
+    LEGAL_PUSH_WINDOW    = (10.0, 11.5)   # 10:00-11:30
+    PRE_COB_WINDOW       = (15.5, 17.0)   # 15:30-17:00
+    MINISTRIES_CUTOFF    = 16.5           # 16:30 — Ministries hard close
+    ACTIVATION_RADIUS_KM = 1.5            # rider must be within this of the zone
+
+    def check(self, rider: RiderTelemetry, hour: int, minute: int,
+              weekday: int = 0) -> Optional[dict]:
+        h_float = _hm_to_float(hour, minute)
+        in_legal = self.LEGAL_PUSH_WINDOW[0] <= h_float < self.LEGAL_PUSH_WINDOW[1]
+        in_cob   = self.PRE_COB_WINDOW[0]    <= h_float < self.PRE_COB_WINDOW[1]
+
+        if not (in_legal or in_cob):
+            return None
+
+        best_zone = None
+        best_dist = 999.0
+
+        for zone in CORPORATE_LANDING_ZONES:
+            # Sunday access denial
+            if zone.get("sunday_closed") and weekday == 6:
+                continue
+            # Saturday reduced capacity
+            sat_cap = zone.get("saturday_capacity", 1.0)
+            if weekday == 5 and sat_cap <= 0:
+                continue
+            # Ministries cuts off at 16:30 in pre-COB window
+            if in_cob and "Ministries" in zone["name"] and h_float >= self.MINISTRIES_CUTOFF:
+                continue
+
+            dist = haversine_km(rider.lat, rider.lng, zone["lat"], zone["lng"])
+            if dist > self.ACTIVATION_RADIUS_KM + zone["radius_km"]:
+                continue
+            if dist < best_dist:
+                best_dist = dist
+                best_zone = zone
+
+        if best_zone is None:
+            return None
+
+        # Determine outbound flow
+        if in_legal:
+            flow_key = "A"     # Legal push always routes to courts
+        elif "Airport City" in best_zone["name"]:
+            flow_key = "B"     # Airport City → KIA / customs
+        elif "Ministries" in best_zone["name"]:
+            flow_key = "A"     # Ministries → High Street courts
+        else:
+            flow_key = "C"     # Ridge / others → upcountry sorting
+
+        flow = CORPORATE_OUTBOUND_FLOWS[flow_key]
+
+        # Nearest pickup node for this flow
+        flow_nodes = [n for n in CORPORATE_PICKUP_NODES if n["flow"] == flow_key]
+        nearest_node = min(
+            flow_nodes,
+            key=lambda n: haversine_km(rider.lat, rider.lng, n["lat"], n["lng"]),
+            default=None,
+        ) if flow_nodes else None
+
+        node_lat = nearest_node["lat"] if nearest_node else best_zone["lat"]
+        node_lng = nearest_node["lng"] if nearest_node else best_zone["lng"]
+        bear_node = bearing_deg(rider.lat, rider.lng, node_lat, node_lng)
+        dist_node = haversine_km(rider.lat, rider.lng, node_lat, node_lng)
+
+        primary_dest = flow["destinations"][0]
+        bear_dest = bearing_deg(node_lat, node_lng,
+                                primary_dest["lat"], primary_dest["lng"])
+
+        # Non-riding time penalty (gate + walk + lift)
+        walk_min = best_zone["walk_distance_m"] / 80.0   # 80 m/min walking pace
+        total_overhead_min = (best_zone["gate_screening_min"] +
+                              walk_min +
+                              best_zone["elevator_wait_min"])
+
+        # Saturday reduced capacity note
+        sat_note = ""
+        if weekday == 5 and best_zone.get("saturday_capacity", 1.0) < 1.0:
+            sat_note = f" ⚠ Saturday — {best_zone['saturday_capacity']*100:.0f}% capacity."
+
+        # Ministries deadline warning
+        cutoff_note = ""
+        if in_cob and "Ministries" in best_zone["name"]:
+            mins_left = (self.MINISTRIES_CUTOFF - h_float) * 60
+            cutoff_note = f" ⚠ MINISTRIES CLOSES IN {mins_left:.0f}min — execute BEFORE 16:30."
+
+        window_type = "MID_MORNING_LEGAL_PUSH" if in_legal else "PRE_COB_CRUNCH"
+
+        return {
+            "alert": "CORPORATE_ARBITRAGE",
+            "window_type": window_type,
+            "zone": best_zone["name"],
+            "zone_lat": best_zone["lat"],
+            "zone_lng": best_zone["lng"],
+            "distance_km": round(best_dist, 2),
+            "flow": flow_key,
+            "flow_name": flow["name"],
+            "pickup_node": nearest_node["name"] if nearest_node else best_zone["name"],
+            "pickup_access": nearest_node["access"] if nearest_node else "main entrance",
+            "pickup_lat": node_lat,
+            "pickup_lng": node_lng,
+            "bearing_to_pickup": round(bear_node, 1),
+            "dist_to_pickup_km": round(dist_node, 2),
+            "primary_destination": primary_dest["name"],
+            "dest_lat": primary_dest["lat"],
+            "dest_lng": primary_dest["lng"],
+            "bearing_to_dest": round(bear_dest, 1),
+            "non_riding_overhead_min": round(total_overhead_min, 1),
+            "gate_screening_min": best_zone["gate_screening_min"],
+            "walk_distance_m": best_zone["walk_distance_m"],
+            "elevator_wait_min": best_zone["elevator_wait_min"],
+            "saturday_capacity_pct": int(best_zone.get("saturday_capacity", 1.0) * 100),
+            "message": (
+                f"[{window_type.replace('_', ' ')}] {flow['name']} → {primary_dest['name']}. "
+                f"Pickup: {nearest_node['name'] if nearest_node else best_zone['name']}. "
+                f"Access: {nearest_node['access'] if nearest_node else 'main entrance'}. "
+                f"Non-riding overhead: {total_overhead_min:.0f}min "
+                f"(gate {best_zone['gate_screening_min']}min + "
+                f"walk {best_zone['walk_distance_m']}m + "
+                f"lift {best_zone['elevator_wait_min']}min)."
+                f"{sat_note}{cutoff_note}"
+            ),
+        }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 10 — WAYBILL PIPELINE INTERCEPTOR  (exact terminal schedules, v4.0)
 # ══════════════════════════════════════════════════════════════════════════════
 
 class WaybillInterceptor:
@@ -1219,23 +1723,24 @@ class AdaptivePoller:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SECTION 14 — BOOSTER ENGINE  (main orchestrator, v3.0)
+# SECTION 14 — BOOSTER ENGINE  (main orchestrator, v4.0)
 # ══════════════════════════════════════════════════════════════════════════════
 
 class BoosterEngine:
     def __init__(self, places_path: str = "places.json"):
-        print("\n  Initialising FalconFX Booster Engine v3.0...")
+        print("\n  Initialising FalconFX Booster Engine v4.0...")
         self.grid      = GridEngine(places_path)
         self.friction  = TrafficFriction()
         self.demand    = DemandSimulator(self.grid)
         self.wave      = VelocityWaveEngine(self.friction)
         self.leapfrog  = LeapfrogRouter(self.grid, self.wave, self.friction)
         self.arbitrage = ReturnTicketArbitrage(self.grid, self.wave)
+        self.corp_arb  = CorporateArbitrageRouter()
         self.waybill   = WaybillInterceptor()
         self.monsoon   = MonsoonLayer(self.grid)
         self.hold_sm   = PredictiveHoldSM()
         self.poller    = AdaptivePoller()
-        print("  Engine ready. [Ghost Penalty | Acceleration Scoring | 4-Layer Friction]\n")
+        print("  Engine ready. [Cash Cow Guard | Ghost Penalty | Mega-Church Waves | Corp Arbitrage]\n")
 
     def compute(self,
                 rider: RiderTelemetry,
@@ -1280,9 +1785,26 @@ class BoosterEngine:
             friction_mult = self.friction.speed_multiplier(rider.lat, rider.lng,
                                                            hour, minute)
             road_label    = self.friction.road_quality_label(rider.lat, rider.lng)
-            expected_ghs  = top_score * 0.08
-            top_band      = self.wave.acceleration_band_label(top_cell.demand_score)
-            ghost_penalty_applied = top_cell.demand_score >= VelocityWaveEngine.GHOST_SCORE_THRESHOLD
+            # v4.0: corporate non-riding overhead baked into yield
+            corp_penalty_min = self.friction.corporate_time_penalty_min(
+                top_cell.grid_lat, top_cell.grid_lng, hour, weekday)
+            corp_yield_discount = (corp_penalty_min / 60.0) * 8.0  # GHS 8/hr opportunity cost
+            expected_ghs  = max(0.0, top_score * 0.08 - corp_yield_discount)
+            # v4.0: velocity-aware band label + Cash Cow Guard
+            top_band      = self.wave.acceleration_band_label(
+                top_cell.demand_score, top_cell.demand_velocity)
+            ghost_penalty_applied = top_band.startswith("GHOST")
+            cash_cow_active       = (top_band == "SUSTAINED_CASH_COW")
+
+            # Event friction advisory (Action Chapel / Spintex gridlock)
+            evt_friction = self.friction.event_friction_info(
+                rider.lat, rider.lng, hour, minute, weekday)
+            evt_note = (f" ⚡ EVENT FRICTION: {evt_friction['zone']} — "
+                        f"{evt_friction['event']} gridlock ({evt_friction['penalty']*100:.0f}% "
+                        f"speed loss, {evt_friction['dist_km']}km away)."
+                        if evt_friction else "")
+            corp_note = (f" Corp overhead baked in: {corp_penalty_min:.0f}min gate+walk+lift."
+                         if corp_penalty_min > 0 else "")
 
             primary_vector = DriftVector(
                 target_lat=top_cell.grid_lat,
@@ -1299,6 +1821,7 @@ class BoosterEngine:
                     f"Head {compass_label(bear)} — arrive in {tta:.0f}min. "
                     f"Road: {road_label}. "
                     f"Traffic friction: {(1-friction_mult)*100:.0f}% total degradation."
+                    f"{evt_note}{corp_note}"
                 ),
             )
 
@@ -1311,7 +1834,7 @@ class BoosterEngine:
             cat_counter = defaultdict(int)
             for p in cell.places:
                 cat_counter[p.get("cat", "other")] += 1
-            band = self.wave.acceleration_band_label(cell.demand_score)
+            band = self.wave.acceleration_band_label(cell.demand_score, cell.demand_velocity)
             hotspots_out.append(HotSpot(
                 lat=cell.grid_lat,
                 lng=cell.grid_lng,
@@ -1333,6 +1856,9 @@ class BoosterEngine:
         # ── 9. Waybill intercept
         waybill_alert = self.waybill.check(rider, hour, minute, weekday)
 
+        # ── 9.5. Corporate arbitrage (v4.0)
+        corp_arb_alert = self.corp_arb.check(rider, hour, minute, weekday)
+
         # ── 10. Monsoon layer
         weather_advisory = self.monsoon.apply(rider, rain_active_zones or [], hour)
 
@@ -1350,7 +1876,16 @@ class BoosterEngine:
                              if VelocityWaveEngine.EMERGING_BAND_LOW
                              <= c.demand_score < VelocityWaveEngine.GHOST_SCORE_THRESHOLD)
         ghost_count    = sum(1 for c in hotspot_cells
-                             if c.demand_score >= VelocityWaveEngine.GHOST_SCORE_THRESHOLD)
+                             if c.demand_score >= VelocityWaveEngine.GHOST_SCORE_THRESHOLD
+                             and c.demand_velocity < VELOCITY_TREND_STABLE_THRESHOLD)
+        cash_cow_count = sum(1 for c in hotspot_cells
+                             if c.demand_score >= VelocityWaveEngine.GHOST_SCORE_THRESHOLD
+                             and c.demand_velocity >= VELOCITY_TREND_STABLE_THRESHOLD)
+        # v4.0 — megachurch event waves currently firing
+        megachurch_active = self.demand._megachurch_event_boost(hour, minute, weekday)
+        megachurch_names  = [s[4] for s in megachurch_active]
+        event_fric = self.friction.event_friction_info(
+            rider.lat, rider.lng, hour, minute, weekday)
 
         grid_stats = {
             "cells_scanned":              len(nearby),
@@ -1362,12 +1897,18 @@ class BoosterEngine:
             "shadow_matrix_active":       shadow_active,
             "shadow_windows_firing":      len(shadow_active),
             "poll_mode":                  AdaptivePoller.label(poll_interval),
-            # Front-running intelligence stats
+            # Front-running intelligence stats (v4.0)
             "front_running_mode":         True,
             "top_zone_band":              top_band,
             "ghost_penalty_applied":      ghost_penalty_applied,
+            "cash_cow_guard_active":      cash_cow_active if ranked else False,
             "emerging_cells":             emerging_count,
             "ghost_cells_suppressed":     ghost_count,
+            "cash_cow_cells":             cash_cow_count,
+            # v4.0 additions
+            "megachurch_waves_firing":    len(megachurch_active),
+            "megachurch_events_active":   megachurch_names[:4],
+            "event_friction":             event_fric,
             "weekday":                    weekday,
         }
 
@@ -1382,13 +1923,14 @@ class BoosterEngine:
             arbitrage_alert=arb_alert,
             waybill_alert=waybill_alert,
             weather_advisory=weather_advisory,
+            corporate_arbitrage=corp_arb_alert,
             grid_stats=grid_stats,
             next_poll_interval_seconds=poll_interval,
         )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SECTION 17 — CONSOLE SIMULATION DEMO  (v3.0 — 5 scenarios)
+# SECTION 17 — CONSOLE SIMULATION DEMO  (v4.0 — 7 scenarios)
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _divider(char="═", width=72): print(char * width)
@@ -1432,7 +1974,7 @@ def _print_grid(g, poll_interval):
 
 
 def run_simulation():
-    _title("FalconFX BOOSTER v3.0 — Asymmetric Companion Weapon  |  Console Simulation")
+    _title("FalconFX BOOSTER v4.0 — Asymmetric Companion Weapon  |  Console Simulation")
 
     engine = BoosterEngine("places.json")
 
@@ -1698,10 +2240,103 @@ def run_simulation():
     else:
         print("    No waybill window at 21:00.")
 
+    # SCENARIO 6 — Mega-Church Spatial Wave: Action Chapel Sunday 2nd Dismissal
+    # Rider near Spintex Rd, 10:52 Sunday (weekday=6)
+    # Expected: massive demand spike injected near Action Chapel (capacity 30,000)
+    #           Spintex event friction advisory fires
+    #           top_zone_band reflects velocity spike from synchronized exit
+
+    _title("SCENARIO 6 — Mega-Church Wave: Action Chapel Spintex, Sunday 10:52")
+
+    rider6 = RiderTelemetry(
+        lat=5.618, lng=-0.111,   # ~1.4km from Action Chapel Impact Arena
+        speed_kmh=0.0,
+        heading_deg=90.0,
+        fuel_level_pct=80,
+    )
+    out6 = engine.compute(
+        rider6, hour=10, minute=52, weekday=6,
+        simulate_hotspots=None,
+    )
+
+    _section("PRIMARY VECTOR")
+    if out6.primary_vector:
+        pv = out6.primary_vector
+        print(f"    Action  : {pv['action']}")
+        print(f"    Bearing : {pv['bearing_deg']}° — {compass_label(pv['bearing_deg'])}")
+        print(f"    TTA     : {pv['tta_min']}min  Dist: {pv['distance_km']}km")
+        print(f"    Yield   : GHS {pv['expected_yield_ghs']}")
+        print(f"    Band    : {pv['confidence']:.0%} confidence")
+        print(f"    Reason  : {pv['reason'][:180]}")
+
+    _section("GRID STATS — v4.0 Mega-Church Fields")
+    g6 = out6.grid_stats
+    print(f"    Top band              : {g6['top_zone_band']}")
+    print(f"    Cash cow active       : {g6.get('cash_cow_guard_active')}")
+    print(f"    Ghost penalty applied : {g6['ghost_penalty_applied']}")
+    print(f"    Megachurch waves fire : {g6['megachurch_waves_firing']}")
+    print(f"    Events active         : {g6.get('megachurch_events_active')}")
+    print(f"    Event friction        : {g6.get('event_friction')}")
+
+    _section("HOTSPOTS")
+    for i, hs in enumerate(out6.hotspots, 1):
+        print(f"    [{i}] {hs['lat']:.4f},{hs['lng']:.4f}  "
+              f"score={hs['demand_score']:.1f}  "
+              f"surge={hs['surge_probability']:.0%}  "
+              f"band={hs['acceleration_band']}")
+        print(f"        {hs['label']}")
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SCENARIO 7 — Corporate Arbitrage: Pre-COB Crunch, Ridge, 15:45 Thursday
+
+    _title("SCENARIO 7 — Corporate Arbitrage: Pre-COB Crunch, North Ridge, Thu 15:45")
+
+    rider7 = RiderTelemetry(
+        lat=5.576, lng=-0.193,   # inside North Ridge Corporate Enclave radius
+        speed_kmh=0.0,
+        heading_deg=180.0,
+        fuel_level_pct=65,
+    )
+    out7 = engine.compute(
+        rider7, hour=15, minute=45, weekday=3,  # Thursday
+        simulate_hotspots=None,
+    )
+
+    _section("CORPORATE ARBITRAGE ALERT")
+    if out7.corporate_arbitrage:
+        ca = out7.corporate_arbitrage
+        print(f"    Alert     : {ca['alert']}")
+        print(f"    Window    : {ca['window_type']}")
+        print(f"    Zone      : {ca['zone']}")
+        print(f"    Flow      : {ca['flow']} — {ca['flow_name']}")
+        print(f"    Pickup    : {ca['pickup_node']}")
+        print(f"    Access    : {ca['pickup_access']}")
+        print(f"    Bearing → : {ca['bearing_to_pickup']}°  ({ca['dist_to_pickup_km']}km)")
+        print(f"    → Dest    : {ca['primary_destination']}")
+        print(f"    Overhead  : {ca['non_riding_overhead_min']}min total")
+        print(f"              : gate={ca['gate_screening_min']}min + "
+              f"walk={ca['walk_distance_m']}m + lift={ca['elevator_wait_min']}min")
+        print(f"    Message   : {ca['message'][:200]}")
+    else:
+        print("    No corporate arbitrage window active at this location/time.")
+        print(f"    (rider at {rider7.lat},{rider7.lng}  hour={15}:{45}  weekday={3})")
+
+    _section("PRIMARY VECTOR")
+    if out7.primary_vector:
+        pv7 = out7.primary_vector
+        print(f"    Action  : {pv7['action']}")
+        print(f"    Band    : {pv7['reason'][:140]}")
+
     _divider()
-    print(f"  v3.0 Simulation complete.  Timestamp: {out1.timestamp}")
-    print(f"  5 scenarios verified — Ghost Penalty, Acceleration Scoring,")
-    print(f"  4-Layer Friction, B2B Wholesale, Exact Terminal Schedules, Night Market.")
+    print(f"  v4.0 Simulation complete.  Timestamp: {out1.timestamp}")
+    print(f"  7 scenarios verified:")
+    print(f"    1. Ghost Penalty + Acceleration Scoring (Osu/Airport evening peak)")
+    print(f"    2. Waybill Intercept + Rain Displacement (Kaneshie Friday AM)")
+    print(f"    3. B2B Wholesale Wednesday (Makola + Kantamanto)")
+    print(f"    4. Predictive HOLD: fuel cost > yield (Tema outskirts)")
+    print(f"    5. Night Market: Osu Oxford St 21:00")
+    print(f"    6. ★ Mega-Church Spatial Wave: Action Chapel Spintex Sunday 10:52")
+    print(f"    7. ★ Corporate Arbitrage: Pre-COB Crunch Ridge Thursday 15:45")
     print(f"  FastAPI → python3 api.py  |  POST /booster/compute")
     _divider()
 
