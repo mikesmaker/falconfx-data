@@ -1,0 +1,118 @@
+[
+  {
+    "id": "relation/9838633",
+    "name": "Dikeni House",
+    "lat": 5.5870953,
+    "lon": -0.1994864,
+    "tags": {
+      "addr:city": "Accra",
+      "addr:community": "Nima",
+      "addr:housenumber": "E240/13",
+      "addr:suburb": "Berlin Bridge",
+      "building": "residential",
+      "building:levels": "1",
+      "building:material": "cement_block",
+      "name": "Dikeni House",
+      "roof:material": "metal",
+      "source": "Open Cities Accra / GARID- Field Survey",
+      "type": "multipolygon"
+    },
+    "source": "overpass",
+    "fetched_at": "2026-06-10T14:50:04Z"
+  },
+  {
+    "id": "relation/9843434",
+    "name": "Prayer house",
+    "lat": 5.5834212,
+    "lon": -0.2002365,
+    "tags": {
+      "addr:city": "Accra",
+      "addr:community": "Nima",
+      "addr:housenumber": "e198/12",
+      "building": "residential",
+      "building:levels": "1",
+      "building:material": "cement_block",
+      "name": "Prayer house",
+      "roof:material": "metal",
+      "type": "multipolygon"
+    },
+    "source": "overpass",
+    "fetched_at": "2026-06-10T14:50:04Z"
+  },
+  {
+    "id": "relation/9911732",
+    "name": "Ibrahim Kado Memorial House",
+    "lat": 5.5846497,
+    "lon": -0.1967956,
+    "tags": {
+      "addr:city": "Accra",
+      "addr:community": "Nima",
+      "addr:housenumber": "E106/15",
+      "addr:suburb": "Alaska",
+      "building": "residential",
+      "building:levels": "1",
+      "building:material": "cement_block",
+      "name": "Ibrahim Kado Memorial House",
+      "roof:material": "metal",
+      "source": "Open Cities Accra / GARID- Field Survey",
+      "type": "multipolygon"
+    },
+    "source": "overpass",
+    "fetched_at": "2026-06-10T14:50:04Z"
+  },
+  {
+    "id": "relation/19524541",
+    "name": "Nightingale Hostel",
+    "lat": 5.7155675,
+    "lon": -0.1869417,
+    "tags": {
+      "building": "residential",
+      "name": "Nightingale Hostel",
+      "type": "multipolygon"
+    },
+    "source": "overpass",
+    "fetched_at": "2026-06-10T14:50:04Z"
+  },
+  {
+    "id": "relation/5259344",
+    "name": "Ministry of Women & Children's Affairs",
+    "lat": 5.5516483,
+    "lon": -0.198289,
+    "tags": {
+      "building": "yes",
+      "name": "Ministry of Women & Children's Affairs",
+      "office": "government",
+      "type": "multipolygon"
+    },
+    "source": "overpass",
+    "fetched_at": "2026-06-10T14:50:04Z"
+  },
+  {
+    "id": "relation/8406754",
+    "name": "Ministry of Roads and Highways",
+    "lat": 5.5530319,
+    "lon": -0.2014606,
+    "tags": {
+      "addr:full": "Ministries, Accra, Ghana",
+      "building": "yes",
+      "building:levels": "5",
+      "contact:email": "info@mrh.gov.gh",
+      "contact:phone": "+233 302661575",
+      "contact:website": "http://mrh.gov.gh",
+      "description": "The Ministry of Roads and Highways is the Government of Ghana ministry responsible for road construction and road maintenance in Ghana.",
+      "name": "Ministry of Roads and Highways",
+      "office": "government",
+      "opening_hours": "Mo-Fr 08:00-17:00",
+      "operator": "Government of Ghana",
+      "operator:type": "public",
+      "project:oif-dfen_carteinnov": "yes",
+      "short_name": "MRH",
+      "source": "oif-dfen_carteinnov",
+      "source:date": "2017-11-12",
+      "type": "multipolygon",
+      "wikidata": "Q6867513"
+    },
+    "source": "overpass",
+    "fetched_at": "2026-06-10T14:50:04Z"
+  }
+]
